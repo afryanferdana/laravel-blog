@@ -27,6 +27,9 @@ ENV HEALTHCHECK_PATH="/up"
 # Copy the app files...
 COPY --chown=www-data:www-data . /var/www/html
 
+# Set correct file permissions for storage and cache directories
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
 # Re-run install, but now with scripts and optimizing the autoloader (should be faster)...
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
