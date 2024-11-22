@@ -17,15 +17,11 @@ RUN curl -sL https://github.com/nodenv/node-build/archive/master.tar.gz | tar xz
 # Drop back to our unprivileged user
 USER www-data
 
-FROM base
-
-ENV SSL_MODE="off"
-ENV AUTORUN_ENABLED="true"
-ENV PHP_OPCACHE_ENABLE="1"
-ENV HEALTHCHECK_PATH="/up"
-
 # Copy the app files...
 COPY --chown=www-data:www-data . /var/www/html
+
+# Copy the custom nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Set correct file permissions for storage and cache directories
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
