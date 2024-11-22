@@ -1,49 +1,53 @@
 version: '3.8'
 
 services:
+  # Service untuk PHP-FPM
   app:
     build:
-      context: .
+      context: .  # Direktori yang berisi Dockerfile
       dockerfile: Dockerfile
-    container_name: laravel-app
-    working_dir: /var/www/html
+    container_name: php-fpm-container
     volumes:
-      - .:/var/www/html
+      - ./path/to/your/app:/var/www/html  # Ganti dengan path yang sesuai
     networks:
-      - laravel-network
-    depends_on:
-      - db
-    ports:
-      - 8000:80  # Mengakses aplikasi Laravel pada port 8000
+      - mynetwork
+    expose:
+      - "9000"  # Membuka port PHP-FPM agar bisa diakses oleh Nginx
+    environment:
+      - SSL_MODE=off
+      - AUTORUN_ENABLED=true
+      - PHP_OPCACHE_ENABLE=1
+      - HEALTHCHECK_PATH=/up
 
+  # Service untuk Nginx
   nginx:
     image: nginx:latest
-    container_name: nginx
-    volumes:
-      - .:/var/www/html
-      - ./nginx.conf:/etc/nginx/nginx.conf  # Pastikan Nginx dikonfigurasi dengan benar
-    ports:
-      - 8080:80
+    container_name: nginx-container
     depends_on:
-      - app
-    networks:
-      - laravel-network
-
-  db:
-    image: mysql:5.7
-    container_name: mysql-db
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: laravel
+      - app  # Nginx akan menunggu PHP-FPM berjalan terlebih dahulu
     volumes:
-      - dbdata:/var/lib/mysql
+      - ./path/to/your/nginx.conf:/etc/nginx/nginx.conf  # Pastikan mengarahkan ke konfigurasi nginx Anda
+      - ./path/to/your/app:/var/www/html  # Volume untuk aplikasi Laravel
+    ports:
+      - "80:80"  # Port Nginx agar bisa diakses
     networks:
-      - laravel-network
+      - mynetwork
+    restart: always
+
+  # Jika Anda menggunakan database (MySQL atau PostgreSQL), tambahkan service database seperti berikut:
+  # database:
+  #   image: mysql:latest
+  #   container_name: mysql-container
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: rootpassword
+  #     MYSQL_DATABASE: laravel
+  #   volumes:
+  #     - ./data/mysql:/var/lib/mysql
+  #   networks:
+  #     - mynetwork
+  #   ports:
+  #     - "3306:3306"
 
 networks:
-  laravel-network:
+  mynetwork:
     driver: bridge
-
-volumes:
-  dbdata:
-    driver: local
